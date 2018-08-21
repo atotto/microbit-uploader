@@ -1,4 +1,4 @@
-# microbitd
+# microbit-uploader
 
 write hex file to microbit
 

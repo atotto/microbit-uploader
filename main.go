@@ -1,21 +1,47 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
+	var microbitPath = ""
+	usr, _ := user.Current()
+	var downloadPath = filepath.Join(usr.HomeDir, "Downloads")
+
+	switch runtime.GOOS {
+	case "darwin":
+		microbitPath = "/Volumes/MICROBIT"
+	case "linux":
+		microbitPath = ""
+	case "windows":
+		microbitPath = ""
+	default:
+		microbitPath = ""
+	}
+
+	flag.StringVar(&microbitPath, "microbit", microbitPath, "microbit dir")
+	flag.StringVar(&downloadPath, "download", downloadPath, "downloads dir")
+	flag.Parse()
+
+	if microbitPath == "" {
+		flag.PrintDefaults()
+		os.Exit(2)
+	}
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to notify watcher: ", err)
 	}
 	defer watcher.Close()
 
@@ -31,7 +57,7 @@ func main() {
 						if err != nil {
 							log.Fatal(err)
 						}
-						out, err := os.Create("/Volumes/MICROBIT//microbit.hex")
+						out, err := os.Create(filepath.Join(microbitPath, "microbit.hex"))
 						if err != nil {
 							log.Println("skip:", fname)
 							os.Remove(event.Name)
@@ -42,7 +68,9 @@ func main() {
 							break
 						}
 						out.Close()
-						exec.Command("diskutil", "unmountDisk", "/Volumes/MICROBIT").Run()
+						if runtime.GOOS == "darwin" {
+							exec.Command("diskutil", "unmountDisk", microbitPath).Run()
+						}
 						log.Println("complete:", fname)
 						os.Remove(event.Name)
 					}
@@ -53,10 +81,9 @@ func main() {
 		}
 	}()
 
-	usr, _ := user.Current()
-	err = watcher.Add(filepath.Join(usr.HomeDir, "Downloads"))
+	err = watcher.Add(downloadPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to watch %s : %s", downloadPath, err)
 	}
 	<-done
 }

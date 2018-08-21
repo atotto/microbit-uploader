@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -41,6 +42,7 @@ func main() {
 							break
 						}
 						out.Close()
+						exec.Command("diskutil", "unmountDisk", "/Volumes/MICROBIT").Run()
 						log.Println("complete:", fname)
 						os.Remove(event.Name)
 					}

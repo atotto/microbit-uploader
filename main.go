@@ -33,6 +33,7 @@ func main() {
 						out, err := os.Create("/Volumes/MICROBIT//microbit.hex")
 						if err != nil {
 							log.Println("skip:", fname)
+							os.Remove(event.Name)
 							break
 						}
 						if _, err := io.Copy(out, in); err != nil {

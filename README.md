@@ -4,7 +4,7 @@ write hex file to microbit
 
 install:
 
-    go get -u github.com/atotto/microbit-uploader
+    go install github.com/atotto/microbit-uploader
 
 run:
 
